@@ -165,7 +165,7 @@ class GameState:
         # that surrounding by 0 so that make it eaiser in check the path
         G = np.zeros([GAMEBOARD_SIZE_ROW+2, GAMEBOARD_SIZE_COL+2])
         G[1:GAMEBOARD_SIZE_ROW+1,1:GAMEBOARD_SIZE_COL+1] = self.gameboard
-        return utils.BFS(G, (in1[0]+1, in1[1]+1), (in2[0]+1, in2[1]+1))
+        return utils.DFS(G, (in1[0]+1, in1[1]+1), (in2[0]+1, in2[1]+1))
 
     def run(self, second_step = False, index = 0, warning = False):
         """

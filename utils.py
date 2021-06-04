@@ -1,7 +1,7 @@
 import random
 import numpy as np
 
-def BFS(G, s, t, randc=3, d=None):
+def DFS(G, s, t, randc=3, d=None):
     """
     Return True if there is a valid path from s to t, false otherwise.
     
@@ -26,7 +26,7 @@ def BFS(G, s, t, randc=3, d=None):
         print('-' * (5-randc), 'try', direction, u, G.shape)
         if 0 <= u[0] < G.shape[1] and 0 <= u[1] < G.shape[0] and G[u[1], u[0]] == 0:
             new_randc = randc if direction == d else randc - 1
-            if BFS(G, u, t, new_randc, direction):
+            if DFS(G, u, t, new_randc, direction):
                 return True
 
     return False
