@@ -11,7 +11,7 @@ WINDOW_HEIGHT = 800
 TOP_MARGIN = 80
 MARGIN = 50
 GAMEBOARD_SIZE_COL = 8
-GAMEBOARD_SIZE_ROW = 2
+GAMEBOARD_SIZE_ROW = 6
 GRID_HEIGHT = WINDOW_WIDTH - 2 * (MARGIN)
 GRID_WIDTH = WINDOW_HEIGHT - TOP_MARGIN - MARGIN
 
@@ -123,6 +123,8 @@ class GameState:
         """
         Get the selected index when click mouse
         """
+        x_index = -1
+        y_index = -1
         for i in range(len(self.X_coord)):
             for j in range(len(self.Y_coord)):
                 if (self.X_coord[i] - HALF_POSITION_WIDTH < mouse_pos[0] < self.X_coord[
@@ -133,7 +135,38 @@ class GameState:
                     y_index = j
         
         return((x_index, y_index))
-            
+    
+    def checkStatus(self, index):
+        """
+        Return True if the index is valid, False otherwise
+        
+        Becareful with the index, for numpy array it will be array[y_index, x_index]
+        """
+        if index[0] == -1:
+            return False
+        if self.gameboard[index[1], index[0]] == 0:
+            return False
+        return True
+    
+    def checkElement(self, in1, in2):
+        """
+        Return True if two elements can be cancelled out, False otherwise
+        """
+        if in1 == in2:
+            return False
+        if not self.gameboard[in1[1],in1[0]] == self.gameboard[in2[1],in2[0]]:
+            return False
+        # Make the gameboard looks like
+        # 0 0 0 0 0
+        # 0 1 2 3 0
+        # 0 4 0 4 0
+        # 0 3 2 1 0
+        # 0 0 0 0 0
+        # that surrounding by 0 so that make it eaiser in check the path
+        G = np.zeros([GAMEBOARD_SIZE_ROW+2, GAMEBOARD_SIZE_COL+2])
+        G[1:GAMEBOARD_SIZE_ROW+1,1:GAMEBOARD_SIZE_COL+1] = self.gameboard
+        return utils.BFS(G, (in1[0]+1, in1[1]+1), (in2[0]+1, in2[1]+1))
+
     def run(self, second_step = False, index = 0, warning = False):
         """
         Run the game
@@ -152,21 +185,29 @@ class GameState:
             new_index = self.get_clicked_element(mouse_pos)
             print("Received second element new click on ({},{})".format(new_index[0], new_index[1]))
             
-            # Becareful with the index, for numpy array it will be array[y_index, x_index]
-            if(self.gameboard[new_index[1],new_index[0]] == self.gameboard[index[1], index[0]] and \
-                new_index != index):
-                self.gameboard[new_index[1],new_index[0]] = 0
-                self.gameboard[index[1],index[0]] = 0
+            # check if the index valid
+            if self.checkStatus(new_index):
+                # check if cancellout out
+                if self.checkElement(index, new_index):
+                    self.gameboard[new_index[1],new_index[0]] = 0
+                    self.gameboard[index[1],index[0]] = 0
+                else:
+                    warning = True
             else:
                 warning = True
-                index = 0
+            index = 0
             second_step = False
         
         elif(mouse_pos != 0):
             warning = False
             index = self.get_clicked_element(mouse_pos)
             print("Received first element new click on ({},{})".format(index[0], index[1]))
-            second_step = True
+            if self.checkStatus(index):
+                second_step = True
+            else:
+                index = 0
+                warning = True
+                second_step = False
 
 
         # Fill background color
